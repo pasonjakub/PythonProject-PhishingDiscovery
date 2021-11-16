@@ -24,3 +24,5 @@ X_train_scaled = scale(X_train)
 X_test_scaled = scale(X_test)
 
 #print("test")
+
+print("test2")
