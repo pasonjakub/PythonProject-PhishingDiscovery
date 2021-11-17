@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import scale
 
@@ -40,3 +41,18 @@ model.fit(X_train_scaled, y_train)
 p_pred = model.predict_proba(X_test_scaled)
 y_pred = model.predict(X_test_scaled)
 print(model.score(X_test_scaled,y_test))
+
+
+from sklearn.tree import DecisionTreeClassifier            #for building classification tree
+from sklearn.tree import plot_tree                         #for drawing classification tree
+from sklearn.model_selection import train_test_split       #for splitting data into training and testing
+from sklearn.model_selection import cross_val_score        #for cross validation
+
+#Decision Trees
+
+#Non-Optimized Decission Tree
+clf_data = DecisionTreeClassifier(random_state = 42)
+clf_data = clf_data.fit(X_train_scaled, y_train)
+
+plt.figure(figsize = (20, 10))
+plot_tree(clf_data, filled = True, rounded = True, class_names = ["Non-Phishing", "Phishing"], feature_names = X.columns);
