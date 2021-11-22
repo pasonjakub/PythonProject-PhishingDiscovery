@@ -78,6 +78,7 @@ model_svm.fit(X_train_scaled, y_train)
 ### Comparison ###
 
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import plot_confusion_matrix
 
 pred_svm = model_svm.predict(X_test_scaled)
 
@@ -93,3 +94,7 @@ svmPrecision = CM_svm[1][1] / (CM_svm[1][1] + CM_svm[1][0])             # TruePo
 print(f"SVM Precision\t= {svmPrecision}")
 svmRecall = CM_svm[1][1] / (CM_svm[1][1] + CM_svm[0][1])                # TruePos / (TruePos + FalseNeg)
 print(f"SVM Recall\t\t= {svmRecall}")
+
+fig, ax = plt.subplots(figsize=(7.5, 7.5))
+plot_confusion_matrix(model_svm, X_test_scaled, y_test, values_format='d', display_labels=["Not phishing","Phishing"], ax = ax)
+plt.show()
