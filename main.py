@@ -41,9 +41,7 @@ from sklearn.linear_model import LogisticRegression
 # Logistic Regression model training
 model_lr = LogisticRegression( penalty='l1', C = 0.08858667904100823, random_state=0, solver='liblinear')
 model_lr.fit(X_train_scaled, y_train)
-p_pred = model_lr.predict_proba(X_test_scaled)
-y_pred = model_lr.predict(X_test_scaled)
-print(model_lr.score(X_test_scaled,y_test))
+#print(model_lr.score(X_test_scaled,y_test))
 
 
 ### Decision Trees ###
@@ -54,11 +52,11 @@ from sklearn.model_selection import train_test_split       # for splitting data 
 from sklearn.model_selection import cross_val_score        # for cross validation
 
 # Non-Optimized Decission Tree
-model_dt = DecisionTreeClassifier(random_state = 42)
-model_dt = model_dt.fit(X_train_scaled, y_train)
+#model_dt = DecisionTreeClassifier(random_state = 42)
+#model_dt = model_dt.fit(X_train_scaled, y_train)
 
-plt.figure(figsize = (20, 10))
-plot_tree(model_dt, filled = True, rounded = True, class_names = ["Non-Phishing", "Phishing"], feature_names = X.columns);
+#plt.figure(figsize = (20, 10))
+#plot_tree(model_dt, filled = True, rounded = True, class_names = ["Non-Phishing", "Phishing"], feature_names = X.columns);
 
 
 ### Support Vector Machines ###
@@ -80,6 +78,39 @@ model_svm.fit(X_train_scaled, y_train)
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
 
+# Logistic Regression
+y_pred_lr = model_lr.predict(X_test_scaled)
+
+lr_cm = confusion_matrix(y_test,y_pred_lr)
+lr_true_neg = lr_cm[0][0]
+lr_false_neg = lr_cm[0][1]
+lr_true_pos = lr_cm[1][1]
+lr_false_pos = lr_cm[1][0]
+
+lr_accuracy = (lr_true_pos + lr_true_neg)/(lr_true_pos + lr_true_neg + lr_false_pos + lr_false_neg)
+print('LR Accuracy\t=',lr_accuracy)
+lr_sensitivity = lr_true_pos/(lr_true_pos + lr_false_neg)
+print('LR Sensitivity\t=',lr_sensitivity)
+lr_specificity = lr_true_neg/(lr_true_neg + lr_false_pos) #more important than sensitivity? (false alarm)
+print('LR Specificity\t=',lr_specificity)
+lr_precision = lr_true_pos/(lr_true_pos + lr_false_pos)
+print('LR Precision\t=',lr_precision)
+lr_recall = lr_true_pos/(lr_true_pos + lr_false_neg)
+print('LR Recall\t\t=',lr_recall)
+
+cm_lr = confusion_matrix(y_test, y_pred_lr)
+
+fig, ax = plt.subplots(figsize=(7.5, 7.5))
+ax.imshow(cm_lr)
+ax.grid(False)
+ax.xaxis.set(ticks=(0, 1), ticklabels=('Predicted Not phishing', 'Predicted Phishing'))
+ax.yaxis.set(ticks=(0, 1), ticklabels=('Actual Not Phishing', 'Actual Phishing'))
+ax.set_ylim(1.5, -0.5)
+for i in range(2):
+    for j in range(2):
+        ax.text(j, i, cm_lr[i, j], ha='center', va='center', color='red')
+
+#Support vector machines
 pred_svm = model_svm.predict(X_test_scaled)
 
 CM_svm = confusion_matrix(y_test, pred_svm)
