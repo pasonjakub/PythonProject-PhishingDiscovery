@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import scale
 from sklearn.model_selection import GridSearchCV
@@ -51,13 +52,64 @@ from sklearn.tree import plot_tree                         # for drawing classif
 from sklearn.model_selection import train_test_split       # for splitting data into training and testing
 from sklearn.model_selection import cross_val_score        # for cross validation
 
+
 # Non-Optimized Decission Tree
-#model_dt = DecisionTreeClassifier(random_state = 42)
-#model_dt = model_dt.fit(X_train_scaled, y_train)
+# model_dt = DecisionTreeClassifier(random_state = 42)
+# model_dt = model_dt.fit(X_train_scaled, y_train)
+#
+# plt.figure(figsize = (20, 10))
+# plot_tree(model_dt, filled = True, rounded = True, class_names = ["Non-Phishing", "Phishing"], feature_names = X.columns);
+#
+# #Searching for best parameters
+#
+# path = model_dt.cost_complexity_pruning_path(X_train_scaled, y_train)           #determine values for alpha
+# ccp_alphas = path.ccp_alphas                                                    #extract different values for alpha
+# ccp_alphas = ccp_alphas[:-1]                                                    #exclude the maximum value for alpha
+#
+# model_dt_a = []                                                                 #new array for storing the tree
+#
+# for ccp_alpha in ccp_alphas:
+#   model_dt = DecisionTreeClassifier(random_state = 0, ccp_alpha = ccp_alpha)
+#   model_dt.fit(X_train_scaled, y_train)
+#   model_dt_a.append(model_dt)
+#
+# train_scores = [model_dt.score(X_train_scaled, y_train) for model_dt in model_dt_a]
+# test_scores = [model_dt.score(X_test_scaled, y_test) for model_dt in model_dt_a]
+#
+# fig, alphax = plt.subplots(figsize = (10,5))
+# alphax.set_xlabel("alpha")
+# alphax.set_ylabel("accuracy")
+# alphax.set_title("Accuracy vs alpha")
+# alphax.plot(ccp_alphas, train_scores, marker = 'o', label = "train", drawstyle = "steps-post")
+# alphax.plot(ccp_alphas, test_scores, marker = 'o', label = "test", drawstyle = "steps-post")
+# alphax.legend()
+# plt.show()
+#
+# model_dt = DecisionTreeClassifier(random_state = 42, ccp_alpha = 0.0005) #create the tree with alpha = 0.0005
+# scores = cross_val_score(model_dt, X_train_scaled, y_train, cv = 5)
+# data_frame = pd.DataFrame(data = {'Tree': range(5), 'accuracy': scores})
+#
+# data_frame.plot(x = 'Tree', y = 'accuracy', marker = 'o', linestyle = '--')
+#
+#
+# alpha_loop_values = [] # an array to store alphas
+#
+# for ccp_alpha in ccp_alphas:
+#   model_dt = DecisionTreeClassifier(random_state = 0, ccp_alpha=ccp_alpha)
+#   scores = cross_val_score(model_dt, X_train_scaled, y_train, cv = 5)
+#   alpha_loop_values.append([ccp_alpha, np.mean(scores), np.std(scores)])
+#
+# alpha_results = pd.DataFrame(alpha_loop_values, columns = ['alpha', 'mean_accuracy', 'std'])
+#
+# alpha_results.plot(figsize = (10,5), x = 'alpha', y = 'mean_accuracy', yerr = 'std', marker = 'o', linestyle = '--')
+#
+# alpha_results[(alpha_results['alpha'] > 0.00004) &  (alpha_results['alpha'] < 0.00007)]
 
-#plt.figure(figsize = (20, 10))
-#plot_tree(model_dt, filled = True, rounded = True, class_names = ["Non-Phishing", "Phishing"], feature_names = X.columns);
+ideal_ccp_alpha = 0.000051
 
+
+model_dt = DecisionTreeClassifier(random_state = 42, ccp_alpha=ideal_ccp_alpha)
+model_dt = model_dt.fit(X_train_scaled, y_train)
 
 ### Support Vector Machines ###
 
@@ -128,4 +180,34 @@ print(f"SVM Recall\t\t= {svmRecall}")
 
 fig, ax = plt.subplots(figsize=(7.5, 7.5))
 plot_confusion_matrix(model_svm, X_test_scaled, y_test, values_format='d', display_labels=["Not phishing","Phishing"], ax = ax)
+
+
+#Decision Trees
+
+
+fig, ax = plt.subplots(figsize=(7.5, 7.5))
+plot_confusion_matrix(model_dt, X_test_scaled, y_test, values_format='d', display_labels = ["Non-Phishing", "Phishing"], ax = ax)
+
+plt.figure(figsize = (20, 10))
+plot_tree(model_dt, filled = True, rounded = True, class_names = ["Non-Phishing", "Phishing"], feature_names = X.columns);
+
+dt_y_pred = model_dt.predict(X_test_scaled)
+
+dt_cm = confusion_matrix(y_test,dt_y_pred)
+dt_true_neg = dt_cm[0][0]
+dt_false_neg = dt_cm[0][1]
+dt_true_pos = dt_cm[1][1]
+dt_false_pos = dt_cm[1][0]
+
+dt_accuracy = (dt_true_pos + dt_true_neg)/(dt_true_pos + dt_true_neg + dt_false_pos + dt_false_neg)
+print('Accuracy\t=',dt_accuracy)
+dt_sensitivity = dt_true_pos/(dt_true_pos + dt_false_neg)
+print('Sensitivity\t=',dt_sensitivity)
+dt_specificity = dt_true_neg/(dt_true_neg + dt_false_pos) #more important than sensitivity? (false alarm)
+print('Specificity\t=',dt_specificity)
+dt_precision = dt_true_pos/(dt_true_pos + dt_false_pos)
+print('Precision\t=',dt_precision)
+dt_recall = dt_true_pos/(dt_true_pos + dt_false_neg)
+print('Recall\t\t=',dt_recall)
+
 plt.show()
