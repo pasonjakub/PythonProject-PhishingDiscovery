@@ -140,7 +140,7 @@ lr_true_pos = lr_cm[1][1]
 lr_false_pos = lr_cm[1][0]
 
 lr_accuracy = (lr_true_pos + lr_true_neg)/(lr_true_pos + lr_true_neg + lr_false_pos + lr_false_neg)
-print('LR Accuracy\t=',lr_accuracy)
+print('LR Accuracy\t\t=',lr_accuracy)
 lr_sensitivity = lr_true_pos/(lr_true_pos + lr_false_neg)
 print('LR Sensitivity\t=',lr_sensitivity)
 lr_specificity = lr_true_neg/(lr_true_neg + lr_false_pos) #more important than sensitivity? (false alarm)
@@ -178,18 +178,17 @@ print(f"SVM Precision\t= {svmPrecision}")
 svmRecall = CM_svm[1][1] / (CM_svm[1][1] + CM_svm[0][1])                # TruePos / (TruePos + FalseNeg)
 print(f"SVM Recall\t\t= {svmRecall}")
 
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+_, ax = plt.subplots(figsize=(7.5, 7.5))
 plot_confusion_matrix(model_svm, X_test_scaled, y_test, values_format='d', display_labels=["Not phishing","Phishing"], ax = ax)
 
 
 #Decision Trees
 
-
-fig, ax = plt.subplots(figsize=(7.5, 7.5))
+_, ax = plt.subplots(figsize=(7.5, 7.5))
 plot_confusion_matrix(model_dt, X_test_scaled, y_test, values_format='d', display_labels = ["Non-Phishing", "Phishing"], ax = ax)
 
 plt.figure(figsize = (20, 10))
-plot_tree(model_dt, filled = True, rounded = True, class_names = ["Non-Phishing", "Phishing"], feature_names = X.columns);
+plot_tree(model_dt, filled = True, rounded = True, class_names = ["Non-Phishing", "Phishing"], feature_names = X.columns)
 
 dt_y_pred = model_dt.predict(X_test_scaled)
 
@@ -200,14 +199,69 @@ dt_true_pos = dt_cm[1][1]
 dt_false_pos = dt_cm[1][0]
 
 dt_accuracy = (dt_true_pos + dt_true_neg)/(dt_true_pos + dt_true_neg + dt_false_pos + dt_false_neg)
-print('Accuracy\t=',dt_accuracy)
+print('DT Accuracy\t\t=',dt_accuracy)
 dt_sensitivity = dt_true_pos/(dt_true_pos + dt_false_neg)
-print('Sensitivity\t=',dt_sensitivity)
-dt_specificity = dt_true_neg/(dt_true_neg + dt_false_pos) #more important than sensitivity? (false alarm)
-print('Specificity\t=',dt_specificity)
+print('DT Sensitivity\t=',dt_sensitivity)
+dt_specificity = dt_true_neg/(dt_true_neg + dt_false_pos) # more important than sensitivity? (false alarm)
+print('DT Specificity\t=',dt_specificity)
 dt_precision = dt_true_pos/(dt_true_pos + dt_false_pos)
-print('Precision\t=',dt_precision)
+print('DT Precision\t=',dt_precision)
 dt_recall = dt_true_pos/(dt_true_pos + dt_false_neg)
-print('Recall\t\t=',dt_recall)
+print('DT Recall\t\t=',dt_recall)
+
+# Receiving operating characteristic
+from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import average_precision_score
+from sklearn.metrics import precision_score
+
+r_probs = [0 for _ in range (len(y_test))]  # random
+lr_probs = model_lr.predict_proba(X_test_scaled)[:,1]
+svm_probs = model_svm.predict_proba(X_test_scaled)[:,1]
+dt_probs = model_dt.predict_proba(X_test_scaled)[:,1]
+
+r_auc = roc_auc_score(y_test, r_probs)
+lr_auc = roc_auc_score(y_test, lr_probs)
+svm_auc = roc_auc_score(y_test, svm_probs)
+dt_auc = roc_auc_score(y_test, dt_probs)
+
+r_fpr, r_tpr, _ = roc_curve(y_test, r_probs)    # false positive rate, true positive rate
+lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
+svm_fpr, svm_tpr, _ = roc_curve(y_test, svm_probs)
+dt_fpr, dt_tpr, _ = roc_curve(y_test, dt_probs)
+
+plt.figure(figsize=(10,5))
+plt.plot(r_fpr, r_tpr, linestyle = '--', label = 'Random prediction: AUROC = %.3f' %r_auc)
+plt.plot(lr_fpr, lr_tpr, linestyle='-', label='Logistic regression: AUROC = %0.3f' % lr_auc)
+plt.plot(svm_fpr, svm_tpr, linestyle = '-', label = 'Support Vector Machines: AUROC = %.3f' %svm_auc)
+plt.plot(dt_fpr, dt_tpr, linestyle='-', label='Decision Tree: AUROC = %0.3f' % dt_auc)
+
+plt.title('Receiver operating characteristic')
+plt.xlabel('False positive rate')
+plt.ylabel('True positive rate')
+plt.legend()
+
+
+
+svm_y_score = model_svm.decision_function(X_test_scaled)
+svm_average_pr = average_precision_score(y_test, svm_y_score)
+lr_y_score = model_lr.decision_function(X_test_scaled)
+lr_average_pr = average_precision_score(y_test, lr_y_score)
+dt_average_pr = precision_score(dt_y_pred, y_test, average='macro')
+
+r_r, r_p, _ = precision_recall_curve(y_test, r_probs)
+svm_r, svm_p, _ = precision_recall_curve(y_test, svm_probs)
+lr_r, lr_p, _ = precision_recall_curve(y_test, lr_probs)
+dt_r, dt_p, _ = precision_recall_curve(y_test, dt_probs)
+
+plt.figure(figsize=(10,5))
+plt.plot(svm_p, svm_r, linestyle = '-', label = 'SVM:  = %.3f' %svm_average_pr)
+plt.plot(lr_p, lr_r, linestyle = '-', label = 'Logistic regression:  = %.3f' %lr_average_pr)
+plt.plot(dt_p, dt_r, linestyle = '-', label = 'Decision Tree:  = %.3f' %dt_average_pr)
+
+plt.title('Precision Recall Curve')
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.legend()
 
 plt.show()
